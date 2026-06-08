@@ -361,6 +361,7 @@ a:hover{color:var(--blush);border-color:var(--blush)}
 .field textarea:focus,
 .field select:focus{border-color:var(--blush)}
 .field input::placeholder,.field textarea::placeholder{color:rgba(251,247,238,.45)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .radio-group,.check-group{display:flex;flex-direction:column;gap:10px}
 .radio-group label,.check-group label{
   display:flex;
@@ -540,6 +541,10 @@ a:hover{color:var(--blush);border-color:var(--blush)}
   <div class="divider"></div>
   <form class="rsvp" id="rsvp">
     <p class="deadline">Просим ответить до 12 июня</p>
+    <!-- honeypot: скрыто от людей, заполняют только боты -->
+    <div class="hp" aria-hidden="true">
+      <label>Не заполняйте это поле<input type="text" name="company" tabindex="-1" autocomplete="off"></label>
+    </div>
     <div class="field">
       <label for="rsvp-name">Имя и фамилия</label>
       <input type="text" id="rsvp-name" name="name" required>
@@ -600,7 +605,7 @@ const io = new IntersectionObserver(entries => {
 }, { threshold: 0.12 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-const RSVP_ENDPOINT = 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
+const RSVP_ENDPOINT = 'https://script.google.com/macros/s/AKfycbymsR3jCLTa7aCzC5CBj-Cy48lcGMVN3YKYfdzs_q1E1sF9731_RON4w6_iJqFH045c/exec';
 
 document.getElementById('rsvp').addEventListener('submit', async e => {
   e.preventDefault();
@@ -614,7 +619,8 @@ document.getElementById('rsvp').addEventListener('submit', async e => {
     attend:   fd.get('attend')   || '',
     plus_one: fd.get('plus_one') || '',
     drink:    fd.getAll('drink'),
-    allergy:  fd.get('allergy')  || ''
+    allergy:  fd.get('allergy')  || '',
+    company:  fd.get('company')  || ''   // honeypot: у людей всегда пусто
   };
   const originalText = btn.textContent;
   btn.disabled = true;
@@ -622,6 +628,7 @@ document.getElementById('rsvp').addEventListener('submit', async e => {
   try {
     await fetch(RSVP_ENDPOINT, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
